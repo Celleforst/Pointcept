@@ -24,6 +24,7 @@ from .semantic_kitti import SemanticKITTIDataset, SemanticKITTIImagePointDataset
 from .nuscenes import NuScenesDataset, NuScenesImagePointDataset
 from .waymo import WaymoDataset
 from .hk import HKDataset
+from .goose_ex import GooseExDataset
 
 # object
 from .modelnet import ModelNetDataset

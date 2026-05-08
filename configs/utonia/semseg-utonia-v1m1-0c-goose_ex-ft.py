@@ -1,7 +1,7 @@
 _base_ = ["../_base_/default_runtime.py"]
 
 # misc custom setting
-batch_size = 24  # bs: total bs in all gpus
+batch_size = 8  # bs: total bs in all gpus
 num_worker = 48
 mix_prob = 0.8
 clip_grad = 3.0
@@ -11,8 +11,8 @@ enable_amp = True
 # model settings
 model = dict(
     type="DefaultSegmentorV2",
-    num_classes=20,
-    backbone_out_channels=1386,
+    num_classes=64,
+    backbone_out_channels=54,
     backbone=dict(
         type="PT-v3m3",
         in_channels=9,
@@ -22,6 +22,10 @@ model = dict(
         enc_channels=(54, 108, 216, 432, 576),
         enc_num_head=(3, 6, 12, 24, 32),
         enc_patch_size=(1024, 1024, 1024, 1024, 1024),
+        dec_depths=(2, 2, 2, 2),
+        dec_channels=(54, 108, 216, 432),
+        dec_num_head=(3, 6, 12, 24),
+        dec_patch_size=(1024, 1024, 1024, 1024),
         mlp_ratio=4,
         qkv_bias=True,
         qk_scale=None,
@@ -36,22 +40,22 @@ model = dict(
         upcast_softmax=False,
         traceable=False,
         mask_token=False,
-        enc_mode=True,
-        freeze_encoder=False,
+        enc_mode=False,
+        freeze_encoder=True,
         rope_base=10,
         shift_coords=None,
         jitter_coords=1.1,
-        rescale_coords=1.2,
+        rescale_coords=1.2
     ),
     criteria=[
         dict(type="CrossEntropyLoss", loss_weight=1.0, ignore_index=-1),
         dict(type="LovaszLoss", mode="multiclass", loss_weight=1.0, ignore_index=-1),
     ],
-    freeze_backbone=True,
+    freeze_backbone=False,
 )
 
 # scheduler settings
-epoch = 100
+epoch = 800
 optimizer = dict(type="AdamW", lr=0.002, weight_decay=0.02)
 scheduler = dict(
     type="OneCycleLR",
@@ -64,37 +68,83 @@ scheduler = dict(
 param_dicts = [dict(keyword="block", lr=0.0002)]
 
 # dataset settings
-dataset_type = "ScanNetDataset"
-data_root = "data/scannet"
+dataset_type = "GooseExDataset"
+data_root = "/scratch/mkrahforst/gooseEx_3d_val"
+train_split = "val"
+val_split = "val"
 
 data = dict(
-    num_classes=20,
+    num_classes=64,
     ignore_index=-1,
     names=[
+        "undefined",
+        "traffic_cone",
+        "snow",
+        "cobble",
+        "obstacle",
+        "leaves",
+        "street_light",
+        "bikeway",
+        "ego_vehicle",
+        "pedestrian_crossing",
+        "road_block",
+        "road_marking",
+        "car",
+        "bicycle",
+        "person",
+        "bus",
+        "forest",
+        "bush",
+        "moss",
+        "traffic_light",
+        "motorcycle",
+        "sidewalk",
+        "curb",
+        "asphalt",
+        "gravel",
+        "boom_barrier",
+        "rail_track",
+        "tree_crown",
+        "tree_trunk",
+        "debris",
+        "crops",
+        "soil",
+        "rider",
+        "animal",
+        "truck",
+        "on_rails",
+        "caravan",
+        "trailer",
+        "building",
         "wall",
-        "floor",
-        "cabinet",
-        "bed",
-        "chair",
-        "sofa",
-        "table",
-        "door",
-        "window",
-        "bookshelf",
-        "picture",
-        "counter",
-        "desk",
-        "curtain",
-        "refridgerator",
-        "shower curtain",
-        "toilet",
-        "sink",
-        "bathtub",
-        "otherfurniture",
+        "rock",
+        "fence",
+        "guard_rail",
+        "bridge",
+        "tunnel",
+        "pole",
+        "traffic_sign",
+        "misc_sign",
+        "barrier_tape",
+        "kick_scooter",
+        "low_grass",
+        "high_grass",
+        "scenery_vegetation",
+        "sky",
+        "water",
+        "wire",
+        "outlier",
+        "heavy_machinery",
+        "container",
+        "hedge",
+        "barrel",
+        "pipe",
+        "tree_root",
+        "military_vehicle"
     ],
     train=dict(
         type=dataset_type,
-        split="train",
+        split=train_split,
         data_root=data_root,
         transform=[
             dict(type="RandomScale", scale=[0.5, 0.5]),
@@ -138,7 +188,7 @@ data = dict(
     ),
     val=dict(
         type=dataset_type,
-        split="val",
+        split=val_split,
         data_root=data_root,
         transform=[
             dict(type="RandomScale", scale=[0.5, 0.5]),
@@ -165,7 +215,7 @@ data = dict(
     ),
     test=dict(
         type=dataset_type,
-        split="val",
+        split=val_split,
         data_root=data_root,
         transform=[
             dict(type="RandomScale", scale=[0.5, 0.5]),
@@ -319,7 +369,7 @@ data = dict(
 hooks = [
     dict(
         type="CheckpointLoader",
-        keywords="module",
+        keywords="module.student.backbone",
         replacement="module.backbone",
     ),
     dict(type="IterationTimer", warmup_iter=2),
