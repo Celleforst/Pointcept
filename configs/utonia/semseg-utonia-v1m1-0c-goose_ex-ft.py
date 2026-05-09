@@ -69,8 +69,8 @@ param_dicts = [dict(keyword="block", lr=0.0002)]
 
 # dataset settings
 dataset_type = "GooseExDataset"
-data_root = "/scratch/mkrahforst/gooseEx_3d_val"
-train_split = "val"
+data_root = "/cluster/scratch/mkrahforst/goose-ex"
+train_split = "train"
 val_split = "val"
 
 data = dict(
