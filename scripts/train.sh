@@ -6,12 +6,12 @@ PYTHON=python
 
 TRAIN_CODE=train.py
 
-DATASET=scannet
-CONFIG="None"
+DATASET=gooseex
+CONFIG="/workspace/Pointcept/configs/utonia/semseg-utonia-v1m1-0c-goose_ex-ft.py"
 EXP_NAME=debug
-WEIGHT="None"
+WEIGHT="/workspace/Pointcept/weights/utonia.pth"
 RESUME=false
-NUM_GPU=None
+NUM_GPU=1
 NUM_MACHINE=1
 DIST_URL="auto"
 
@@ -72,7 +72,7 @@ echo "Dist URL: $DIST_URL"
 EXP_DIR=exp/${DATASET}/${EXP_NAME}
 MODEL_DIR=${EXP_DIR}/model
 CODE_DIR=${EXP_DIR}/code
-CONFIG_DIR=configs/${DATASET}/${CONFIG}.py
+CONFIG_DIR=${CONFIG}
 
 
 echo " =========> CREATE EXP DIR <========="
@@ -91,6 +91,7 @@ echo "Loading config in:" $CONFIG_DIR
 export PYTHONPATH=./$CODE_DIR
 echo "Running code in: $CODE_DIR"
 
+WEIGHT="weights/pretrain-utonia-v1m1-0-base_stagev2.pth"
 
 echo " =========> RUN TASK <========="
 ulimit -n 65536
@@ -106,9 +107,7 @@ then
 else
     $PYTHON "$CODE_DIR"/tools/$TRAIN_CODE \
     --config-file "$CONFIG_DIR" \
-    --num-gpus "$NUM_GPU" \
-    --num-machines "$NUM_MACHINE" \
-    --machine-rank ${SLURM_NODEID:-0} \
+    --num-gpus 1 \
     --dist-url ${DIST_URL} \
     --options save_path="$EXP_DIR" resume="$RESUME" weight="$WEIGHT"
 fi

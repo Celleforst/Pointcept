@@ -2,7 +2,7 @@ _base_ = ["../_base_/default_runtime.py"]
 
 # misc custom setting
 batch_size = 8  # bs: total bs in all gpus
-num_worker = 48
+num_worker = 4
 mix_prob = 0.8
 clip_grad = 3.0
 empty_cache = False
@@ -69,7 +69,7 @@ param_dicts = [dict(keyword="block", lr=0.0002)]
 
 # dataset settings
 dataset_type = "GooseExDataset"
-data_root = "/cluster/scratch/mkrahforst/goose-ex"
+data_root = "/data/gooseEx_3d_train"
 train_split = "train"
 val_split = "val"
 
